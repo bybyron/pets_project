@@ -1,0 +1,188 @@
+﻿@{
+    ViewBag.Title = "Pet Rescue";
+    
+    if(HttpContext.Current.User.Identity.IsAuthenticated){
+        ViewBag.isLoggedIn = true;
+    }
+    else
+    {
+        ViewBag.isLoggedIn = false;
+    }
+}
+
+<style>
+    .selected {
+        color: #2a6496;
+        text-decoration: underline;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Pet Rescue</h1>
+    <p class="lead">Add a lost pet or help find one</p>
+</div>
+
+<!--<ul class="nav nav-pills" data-bind="foreach: navItems">
+    <li role="presentation"><a href="#" data-bind="text: $data"></a></li>
+</ul> -->
+
+<div class="row">
+    <div class="col-md-4">
+
+        <!-- LIST OF PETS -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="col-sm-5" style="padding-left:0;">
+                    <h2 class="panel-title">List of Pets</h2>
+                </div>
+                <div class="col-sm-7" style="padding-right:0;">
+                    <ul class="list-unstyled list-inline" style="float: right" data-bind="foreach: foundFilters">
+                        <li><a href="#" style="padding-right:0" data-bind="text: $data, css:{selected: $data == $parent.foundFilter()}, click: $parent.setFoundFilter"></a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="panel-body">
+                <!-- SEARCH INPUT -->
+                <form style="padding-bottom:15px">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" data-bind="value: search, valueUpdate: 'afterkeydown'" />
+                    </div>
+                </form>
+                <ul class="list-unstyled" data-bind="foreach: filteredPets">
+                    <li style="border-bottom:1px solid  #f7f7f7; padding: 10px 0px;">
+                        <strong><span data-bind="text: Name"></span></strong> the <span data-bind="text: Type"></span>
+                        <!-- DELETE AND DETAILS BUTTONS -->
+                        @if(ViewBag.isLoggedIn){
+                            <a class="glyphicon glyphicon-remove" style="float: right; color:#ce5e5e; padding-left:10px;" href="#" data-bind="click: $parent.deletePet"></a>
+                        }
+                        <small style="float:right"><a style="color: #2ab485; padding-left: 10px;" href="#" data-bind="click: $parent.getPetDetails">Details</a></small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+
+        <!-- PET DETAILS -->
+        <!-- ko if:petDetails()-->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 class="panel-title" style="float:left;">Pet Details</h2>
+
+                <!-- EDIT BUTTON -->
+                @if(ViewBag.isLoggedIn){
+                    <!-- ko if:!editPet.Name()-->
+                    <small><a id="editModeBtn" style="color:#2ab485; float:right;" href="#" data-bind="click: startPetEdit">Edit</a></small>
+                    <!-- /ko -->
+                }
+            </div>
+            <div class="panel-body">
+
+                <!-- VIEW DETAILS -->
+                <!-- ko if:!editPet.Name()-->
+                <table id="viewDetails" class="table">
+                    <tr><td>Name</td><td data-bind="text: petDetails().Name"></td></tr>
+                    <tr><td>Type</td><td data-bind="text: petDetails().Type"></td></tr>
+                    <tr><td>Description</td><td data-bind="text: petDetails().Description"></td></tr>
+                    <tr><td>Owner</td><td data-bind="text: petDetails().OwnerName"></td></tr>
+                    <tr><td>Found?</td><td data-bind="text: petDetails().Found"></td></tr>
+                </table>
+                <!-- /ko-->
+
+                <!-- EDIT DETAILS -->
+                <!-- ko if:editPet.Name()-->
+                <form id="editDetails" class="form-horizontal" data-bind="submit: updatePet">
+                    <!-- Name -->
+                    <div class="form-group" data-bind="with: editPet">
+                        <label for="inputName" class="col-sm-4 control-label">Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="inputName" data-bind="value: Name" />
+                        </div>
+                    </div>
+                    <!-- Type -->
+                    <div class="form-group" data-bind="with: editPet">
+                        <label for="inputType" class="col-sm-4 control-label">Type</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="inputType" data-bind="value: Type" />
+                        </div>
+                    </div>
+                    <!-- Description -->
+                    <div class="form-group" data-bind="with: editPet">
+                        <label for="inputDescription" class="col-sm-4 control-label">Description</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="inputDescription" data-bind="value: Description" />
+                        </div>
+                    </div>
+                    <!-- Found -->
+                    <div class="form-group" data-bind="with: editPet">
+                        <label for="inputDescription" class="col-sm-4 control-label">Found?</label>
+                        <div class="col-sm-8">
+                            <input type="checkbox" class="form-control" style="height:20px; border: none; box-shadow:none;" id="inputFound" data-bind="checked:Found, value: Found" />
+                        </div>
+                    </div>
+                    <!-- cancel edit button -->
+                    <button type="submit" class="btn btn-default">Update</button>
+                    <button class="btn btn-default" data-bind="click: endPetEdit">Cancel</button>
+                </form>
+                <!-- /ko-->
+            </div>
+        </div>
+        <!-- /ko-->
+    </div>
+    <div class="col-md-4">
+        
+        <!-- ADD PET -->
+        @if(ViewBag.isLoggedIn){
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Add Pet</h2>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" data-bind="submit: addPet">
+                        <!-- Name -->
+                        <div class="form-group" data-bind="with: newPet">
+                            <label for="inputName" class="col-sm-4 control-label">Name</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" id="inputName" data-bind="value: Name" />
+                            </div>
+                        </div>
+                        <!-- Pic -->
+                        <!--<div class="form-group" data-bind="with: newPet">
+                            <label for="inputPic" class="col-sm-4 control-label">Picture</label>
+                            <div class="col-sm-8">
+                                <input type="file" class="form-control" style="box-shadow:none; border:none; padding:0;" id="inputPic" data-bind="value: ImagePath" />
+                            </div>
+                        </div> -->
+                        <!-- Type -->
+                        <div class="form-group" data-bind="with: newPet">
+                            <label for="inputType" class="col-sm-4 control-label">Type</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" id="inputType" data-bind="value: Type" />
+                            </div>
+                        </div>
+                        <!-- Description -->
+                        <div class="form-group" data-bind="with: newPet">
+                            <label for="inputDescription" class="col-sm-4 control-label">Description</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" id="inputDescription" data-bind="value: Description" />
+                            </div>
+                        </div>
+                        <!-- Owner -->
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Owner</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" data-bind="options: owners, optionsText: 'Name', value: newPet.Owner"></select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-default">Add</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ERROR MESSAGE -->
+<div class="row">
+    <div class="alert alert-danger" data-bind="visible: error"><p data-bind="text: error"></p></div>
+</div>
